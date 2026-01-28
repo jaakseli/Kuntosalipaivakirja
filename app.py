@@ -1,15 +1,14 @@
 import sqlite3
 from flask import Flask
 from flask import redirect, render_template, request, session
-import config, forum, users
+import config, users
 
 app = Flask(__name__)
 app.secret_key = config.secret_key
 
 @app.route("/")
 def index():
-    threads = forum.get_threads()
-    return render_template("index.html", threads=threads)
+    return render_template("index.html")
 
 
 #sovellus
