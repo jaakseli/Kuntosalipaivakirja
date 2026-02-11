@@ -68,5 +68,8 @@ def add_workout():
         description = request.form["description"]
         user_id = session["user_id"]
         
+        if not workout_name or len(workout_name.strip()) == 0:
+            return render_template("add_workout.html")
+        
         workouts.add_workout(user_id, workout_name, description)
         return render_template("workout_added.html")
