@@ -1,7 +1,7 @@
 import sqlite3
 from flask import Flask
 from flask import redirect, render_template, request, session
-import config, users
+import config, users, workouts
 
 app = Flask(__name__)
 app.secret_key = config.secret_key
@@ -54,3 +54,22 @@ def login():
 def logout():
     del session["user_id"]
     return redirect("/")
+
+@app.route("/add_workout", methods=["GET", "POST"])
+def add_workout():
+    if "user_id" not in session:
+        return redirect("/login")
+    
+    if request.method == "GET":
+        return render_template("add_workout.html")
+    
+    if request.method == "POST":
+        workout_name = request.form["workout_name"]
+        description = request.form["description"]
+        user_id = session["user_id"]
+        
+        if not workout_name or len(workout_name.strip()) == 0:
+            return render_template("add_workout.html")
+        
+        workouts.add_workout(user_id, workout_name, description)
+        return render_template("workout_added.html")

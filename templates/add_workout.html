@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Lisää treeni</title>
+</head>
+
+<body>
+  <h1>Lisää uusi treeni</h1>
+
+  <form action="/add_workout" method="post">
+    <p>
+      Treenin nimi: <br />
+      <input type="text" name="workout_name" required />
+    </p>
+    <p>
+      Kuvaus: <br />
+      <textarea name="description" rows="5" cols="40"></textarea>
+    </p>
+    <input type="submit" value="Lisää treeni" />
+  </form>
+
+  <hr />
+  <p>
+    <a href="/">Etusivulle</a>
+  </p>
+</body>
+
+</html>
