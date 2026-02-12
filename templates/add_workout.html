@@ -3,6 +3,7 @@
 
 <head>
   <title>Lisää treeni</title>
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 
 <body>
@@ -14,9 +15,24 @@
       <input type="text" name="workout_name" required />
     </p>
     <p>
+      Kategoria: <br />
+      <select name="category" required>
+        {% for value, label in workout_categories %}
+        <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </p>
+    <p>
       Kuvaus: <br />
       <textarea name="description" rows="5" cols="40"></textarea>
     </p>
+    <p>
+      Harjoitteiden määrä: <br />
+      <input type="number" id="exercise-count" name="exercise_count" min="1" max="20" value="1" required />
+    </p>
+
+    <div id="exercises"></div>
+
     <input type="submit" value="Lisää treeni" />
   </form>
 
@@ -24,6 +40,42 @@
   <p>
     <a href="/">Etusivulle</a>
   </p>
+
+  <script>
+    const countInput = document.getElementById("exercise-count");
+    const exercisesContainer = document.getElementById("exercises");
+    const exerciseCategories = {{ exercise_categories | tojson }};
+
+    function renderExercises() {
+      const count = parseInt(countInput.value || "0", 10);
+      exercisesContainer.innerHTML = "";
+
+      for (let i = 1; i <= count; i += 1) {
+        const fieldset = document.createElement("fieldset");
+        const legend = document.createElement("legend");
+        legend.textContent = "Harjoite " + i;
+        fieldset.appendChild(legend);
+
+        let categoryOptions = "";
+        for (const [value, label] of exerciseCategories) {
+          categoryOptions += '<option value="' + value + '">' + label + '</option>';
+        }
+
+        fieldset.innerHTML +=
+          '<label>Harjoite:<br /><select name="exercise_category" required>' +
+          categoryOptions +
+          '</select></label><br />' +
+          '<label>Setit:<br /><input type="number" name="sets" min="1" required /></label><br />' +
+          '<label>Toistot:<br /><input type="number" name="reps" min="1" required /></label><br />' +
+          '<label>Painot (kg):<br /><input type="number" name="weight" min="0" step="0.5" required /></label>';
+
+        exercisesContainer.appendChild(fieldset);
+      }
+    }
+
+    countInput.addEventListener("input", renderExercises);
+    window.addEventListener("load", renderExercises);
+  </script>
 </body>
 
 </html>

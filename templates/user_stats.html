@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>{{ user.username }}: tilastot</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+  <h1>{{ user.username }}: tilastot</h1>
+
+  <p>
+    Treeneja yhteensa: {{ workouts|length }}
+  </p>
+
+  {% if workouts and workouts|length > 0 %}
+  <ul>
+    {% for item in workouts %}
+    {% set workout = item.workout %}
+    {% set exercises = item.exercises %}
+    <li>
+      <strong>{{ workout.workout_name }}</strong> ({{ workout.created_at }})
+      <br />{{ workout_category_labels.get(workout.category, workout.category) }}
+      {% if workout.description %}
+      <br />{{ workout.description }}
+      {% endif %}
+      <br /><a href="/workouts/{{ workout.id }}">Katso treeni</a>
+      {% if session.user_id == user.id %}
+      | <a href="/workouts/{{ workout.id }}/edit">Muokkaa</a>
+      {% endif %}
+      {% if exercises and exercises|length > 0 %}
+      <ul>
+        {% for exercise in exercises %}
+        <li>
+          Harjoite {{ exercise.exercise_number }}:
+          {{ exercise_category_labels.get(exercise.category, exercise.category) }} -
+          {{ exercise.sets }} x {{ exercise.reps }} @ {{ exercise.weight }} kg
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p>
+    Ei treeneja viela.
+  </p>
+  {% endif %}
+
+  <hr />
+  <p>
+    <a href="/">Etusivulle</a>
+  </p>
+</body>
+
+</html>

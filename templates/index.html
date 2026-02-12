@@ -3,14 +3,33 @@
 
 <head>
   <title>Treenipäiväkirja</title>
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 
 <body>
+
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+  <div class="flash" role="status">
+    <div class="flash__inner">{{ messages[0] }}</div>
+  </div>
+  <script>
+    setTimeout(() => {
+      const flash = document.querySelector(".flash");
+      if (flash) {
+        flash.classList.add("flash--hide");
+        setTimeout(() => flash.remove(), 400);
+      }
+    }, 2200);
+  </script>
+  {% endif %}
+  {% endwith %}
 
   <p>
     <a href="/register">Luo tunnus</a> |
     {% if session.user_id %}
     <a href="/add_workout">Lisää treeni</a> |
+    <a href="/users/{{ session.user_id }}">Omat tilastot</a> |
     <a href="/logout">Kirjaudu ulos</a>
     {% else %}
     <a href="/login">Kirjaudu sisään</a>
@@ -18,9 +37,44 @@
   </p>
 
   <h1>Kuntosalipäiväkirja</h1>
+  <form action="/search" method="get">
+    <p>
+      Haku: <br />
+      <input type="text" name="q" value="{{ query or '' }}" />
+      <input type="submit" value="Hae" />
+      {% if query %}
+      <a href="/">Tyhjenna</a>
+      {% endif %}
+    </p>
+  </form>
+
+  {% if query %}
+  <h2>Hakutulokset: {{ query }}</h2>
+  {% else %}
+  <h2>Kaikki treenit</h2>
+  {% endif %}
+
+  {% if workouts and workouts|length > 0 %}
+  <ul>
+    {% for workout in workouts %}
+    <li>
+      <strong>{{ workout.workout_name }}</strong>
+      — {{ workout.username }} ({{ workout.created_at }})
+      <br />{{ workout_category_labels.get(workout.category, workout.category) }}
+      {% if workout.description %}
+      <br />{{ workout.description }}
+      {% endif %}
+      <br />
+      <a href="/workouts/{{ workout.id }}">Katso treeni</a> |
+      <a href="/users/{{ workout.user_id }}">Katso käyttäjän tilastot</a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
   <p>
-    Tähän tulee sovellus :-D
+    Ei treenejä vielä.
   </p>
+  {% endif %}
   
 </body>
 
