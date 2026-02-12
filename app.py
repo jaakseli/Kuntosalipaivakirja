@@ -1,6 +1,7 @@
+import secrets
 import sqlite3
 from flask import Flask
-from flask import flash, redirect, render_template, request, session
+from flask import abort, flash, redirect, render_template, request, session
 import config, users, workouts
 
 app = Flask(__name__)
@@ -32,6 +33,22 @@ EXERCISE_CATEGORIES = [
 WORKOUT_CATEGORY_LABELS = dict(WORKOUT_CATEGORIES)
 EXERCISE_CATEGORY_LABELS = dict(EXERCISE_CATEGORIES)
 
+def _get_csrf_token():
+    token = session.get("csrf_token")
+    if not token:
+        token = secrets.token_urlsafe(32)
+        session["csrf_token"] = token
+    return token
+
+def _validate_csrf():
+    session_token = session.get("csrf_token")
+    form_token = request.form.get("csrf_token")
+    return bool(session_token and form_token and session_token == form_token)
+
+@app.context_processor
+def inject_csrf_token():
+    return {"csrf_token": _get_csrf_token()}
+
 @app.route("/")
 def index():
     all_workouts = workouts.get_all_workouts()
@@ -62,6 +79,8 @@ def register():
         return render_template("register.html")
 
     if request.method == "POST":
+        if not _validate_csrf():
+            abort(400)
         username = request.form["username"]
         password1 = request.form["password1"]
         password2 = request.form["password2"]
@@ -84,6 +103,8 @@ def login():
         return render_template("login.html")
 
     if request.method == "POST":
+        if not _validate_csrf():
+            abort(400)
         username = request.form["username"]
         password = request.form["password"]
 
@@ -109,6 +130,8 @@ def add_workout():
         return _render_add_workout()
     
     if request.method == "POST":
+        if not _validate_csrf():
+            abort(400)
         workout_name = request.form["workout_name"]
         category = request.form["category"]
         description = request.form["description"]
@@ -157,6 +180,8 @@ def edit_workout(workout_id):
         )
 
     workout_name = request.form["workout_name"]
+    if not _validate_csrf():
+        abort(400)
     category = request.form["category"]
     description = request.form["description"]
     exercise_count = request.form.get("exercise_count", type=int)

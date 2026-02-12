@@ -10,6 +10,7 @@
   <h1>Lisää uusi treeni</h1>
 
   <form action="/add_workout" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
     <p>
       Treenin nimi: <br />
       <input type="text" name="workout_name" required />

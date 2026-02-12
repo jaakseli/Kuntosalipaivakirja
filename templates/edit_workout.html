@@ -10,6 +10,7 @@
   <h1>Muokkaa treenia</h1>
 
   <form action="/workouts/{{ workout.id }}/edit" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
     <p>
       Treenin nimi: <br />
       <input type="text" name="workout_name" value="{{ workout.workout_name }}" required />
