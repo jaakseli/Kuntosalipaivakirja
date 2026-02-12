@@ -3,9 +3,27 @@
 
 <head>
   <title>Kirjaudu sisään</title>
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 
 <body>
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+  <div class="flash" role="status">
+    <div class="flash__inner">{{ messages[0] }}</div>
+  </div>
+  <script>
+    setTimeout(() => {
+      const flash = document.querySelector(".flash");
+      if (flash) {
+        flash.classList.add("flash--hide");
+        setTimeout(() => flash.remove(), 400);
+      }
+    }, 2200);
+  </script>
+  {% endif %}
+  {% endwith %}
+
   <h1>Kirjaudu sisään</h1>
 
   <form action="/login" method="post">

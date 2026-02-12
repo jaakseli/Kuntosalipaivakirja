@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>{{ workout.workout_name }}</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+  <h1>{{ workout.workout_name }}</h1>
+  <p>
+    {{ workout.username }} ({{ workout.created_at }})
+  </p>
+  <p>
+    {{ workout_category_labels.get(workout.category, workout.category) }}
+  </p>
+  {% if workout.description %}
+  <p>
+    {{ workout.description }}
+  </p>
+  {% endif %}
+
+  {% if exercises and exercises|length > 0 %}
+  <h2>Harjoitteet</h2>
+  <ul>
+    {% for exercise in exercises %}
+    <li>
+      Harjoite {{ exercise.exercise_number }}:
+      {{ exercise_category_labels.get(exercise.category, exercise.category) }} -
+      {{ exercise.sets }} x {{ exercise.reps }} @ {{ exercise.weight }} kg
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p>
+    Ei harjoitteita.
+  </p>
+  {% endif %}
+
+  <hr />
+  <p>
+    <a href="/users/{{ workout.user_id }}">Takaisin tilastoihin</a> |
+    <a href="/">Etusivulle</a>
+  </p>
+</body>
+
+</html>
