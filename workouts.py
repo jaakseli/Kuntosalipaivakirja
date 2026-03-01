@@ -93,6 +93,12 @@ def search_workouts(keyword):
     """
     return db.query(sql, [like_term, like_term, like_term, like_term])
 
+def delete_workout(workout_id, user_id):
+    # Delete exercises first (also handled by CASCADE in schema)
+    db.execute("DELETE FROM exercises WHERE workout_id = ?", [workout_id])
+    # Delete the workout (only if it belongs to the user)
+    db.execute("DELETE FROM workouts WHERE id = ? AND user_id = ?", [workout_id, user_id])
+
 def _insert_exercises(workout_id, exercises):
     exercise_sql = """
         INSERT INTO exercises (workout_id, exercise_number, category, sets, reps, weight)

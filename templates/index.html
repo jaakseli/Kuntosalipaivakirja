@@ -13,25 +13,16 @@
   <div class="flash" role="status">
     <div class="flash__inner">{{ messages[0] }}</div>
   </div>
-  <script>
-    setTimeout(() => {
-      const flash = document.querySelector(".flash");
-      if (flash) {
-        flash.classList.add("flash--hide");
-        setTimeout(() => flash.remove(), 400);
-      }
-    }, 2200);
-  </script>
   {% endif %}
   {% endwith %}
 
   <p>
-    <a href="/register">Luo tunnus</a> |
     {% if session.user_id %}
     <a href="/add_workout">Lisää treeni</a> |
     <a href="/users/{{ session.user_id }}">Omat tilastot</a> |
     <a href="/logout">Kirjaudu ulos</a>
     {% else %}
+    <a href="/register">Luo tunnus</a> |
     <a href="/login">Kirjaudu sisään</a>
     {% endif %}
   </p>
@@ -62,10 +53,17 @@
       — {{ workout.username }} ({{ workout.created_at }})
       <br />{{ workout_category_labels.get(workout.category, workout.category) }}
       {% if workout.description %}
-      <br />{{ workout.description }}
+      <br /><span style="white-space: pre-line;">{{ workout.description }}</span>
       {% endif %}
       <br />
       <a href="/workouts/{{ workout.id }}">Katso treeni</a> |
+      {% if session.user_id == workout.user_id %}
+      <a href="/workouts/{{ workout.id }}/edit">Muokkaa</a> |
+      <form action="/workouts/{{ workout.id }}/delete" method="post" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+        <button type="submit">Poista</button>
+      </form> |
+      {% endif %}
       <a href="/users/{{ workout.user_id }}">Katso käyttäjän tilastot</a>
     </li>
     {% endfor %}

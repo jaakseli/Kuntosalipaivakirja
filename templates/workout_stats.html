@@ -15,7 +15,7 @@
     {{ workout_category_labels.get(workout.category, workout.category) }}
   </p>
   {% if workout.description %}
-  <p>
+  <p style="white-space: pre-line;">
     {{ workout.description }}
   </p>
   {% endif %}
@@ -36,10 +36,51 @@
     Ei harjoitteita.
   </p>
   {% endif %}
+  <h2>Kommentit</h2>
 
+  {% if workout_comments and workout_comments|length > 0 %}
+  <div style="background: var(--card); border: 1px solid var(--edge); border-radius: 18px; box-shadow: 0 12px 30px rgba(31, 29, 26, 0.12); padding: 18px 22px; margin: 16px 0;">
+    {% for comment in workout_comments %}
+    <div style="border-bottom: 1px dashed var(--edge); padding: 14px 0; display: flex; justify-content: space-between; align-items: start;">
+      <div>
+        <strong>{{ comment.username }}</strong> ({{ comment.created_at }})
+        <p style="white-space: pre-line; margin: 8px 0 0 0;">{{ comment.comment_text }}</p>
+      </div>
+      {% if session.user_id == comment.user_id %}
+      <form action="/comments/{{ comment.id }}/delete" method="post" style="display:inline; margin: 0 0 0 16px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+        <button type="submit">Poista</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p>Ei kommentteja vielä.</p>
+  {% endif %}
+
+  {% if session.user_id %}
+  <h3>Lisää kommentti</h3>
+  <form action="/workouts/{{ workout.id }}/comment" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+    <p>
+      <textarea name="comment_text" rows="4" cols="40" required></textarea>
+    </p>
+    <input type="submit" value="Lisää kommentti" />
+  </form>
+  {% else %}
+  <p><a href="/login">Kirjaudu sisään</a> lisätäksesi kommentin.</p>
+  {% endif %}
   <hr />
   <p>
     <a href="/users/{{ workout.user_id }}">Takaisin tilastoihin</a> |
+    {% if session.user_id == workout.user_id %}
+    <a href="/workouts/{{ workout.id }}/edit">Muokkaa</a> |
+    <form action="/workouts/{{ workout.id }}/delete" method="post" style="display:inline;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+      <button type="submit">Poista</button>
+    </form> |
+    {% endif %}
     <a href="/">Etusivulle</a>
   </p>
 </body>
