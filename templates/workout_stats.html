@@ -73,7 +73,7 @@
   {% endif %}
   <hr />
   <p>
-    <a href="/users/{{ workout.user_id }}">Takaisin tilastoihin</a> |
+    <a href="/users/{{ workout.user_id }}">Käyttäjän tilastot</a> |
     {% if session.user_id == workout.user_id %}
     <a href="/workouts/{{ workout.id }}/edit">Muokkaa</a> |
     <form action="/workouts/{{ workout.id }}/delete" method="post" style="display:inline;">
