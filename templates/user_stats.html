@@ -22,11 +22,15 @@
       <strong>{{ workout.workout_name }}</strong> ({{ workout.created_at }})
       <br />{{ workout_category_labels.get(workout.category, workout.category) }}
       {% if workout.description %}
-      <br />{{ workout.description }}
+      <br /><span style="white-space: pre-line;">{{ workout.description }}</span>
       {% endif %}
       <br /><a href="/workouts/{{ workout.id }}">Katso treeni</a>
       {% if session.user_id == user.id %}
       | <a href="/workouts/{{ workout.id }}/edit">Muokkaa</a>
+      | <form action="/workouts/{{ workout.id }}/delete" method="post" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+        <button type="submit">Poista</button>
+      </form>
       {% endif %}
       {% if exercises and exercises|length > 0 %}
       <ul>

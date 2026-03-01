@@ -9,8 +9,17 @@
 <body>
   <h1>Muokkaa treenia</h1>
 
+  <form action="/workouts/{{ workout.id }}/edit" method="get">
+    <p>
+      Harjoitteiden määrä: <br />
+      <input type="number" name="exercise_count" min="1" max="20" value="{{ exercise_count }}" required />
+      <input type="submit" value="Aseta määrä" />
+    </p>
+  </form>
+
   <form action="/workouts/{{ workout.id }}/edit" method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+    <input type="hidden" name="exercise_count" value="{{ exercise_count }}" />
     <p>
       Treenin nimi: <br />
       <input type="text" name="workout_name" value="{{ workout.workout_name }}" required />
@@ -27,12 +36,26 @@
       Kuvaus: <br />
       <textarea name="description" rows="5" cols="40">{{ workout.description }}</textarea>
     </p>
-    <p>
-      Harjoitteiden maara: <br />
-      <input type="number" id="exercise-count" name="exercise_count" min="1" max="20" value="{{ exercises|length }}" required />
-    </p>
 
-    <div id="exercises"></div>
+    <h3>Harjoitteet ({{ exercise_count }})</h3>
+    {% for i in range(exercise_count) %}
+    <fieldset>
+      <legend>Harjoite {{ i + 1 }}</legend>
+      <label>Harjoite:<br />
+        <select name="exercise_category" {% if i < exercises|length %}required{% endif %}>
+          {% if i >= exercises|length %}
+          <option value="">-- Valitse --</option>
+          {% endif %}
+          {% for value, label in exercise_categories %}
+          <option value="{{ value }}" {% if i < exercises|length and value == exercises[i].category %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label><br />
+      <label>Setit:<br /><input type="number" name="sets" min="1" value="{% if i < exercises|length %}{{ exercises[i].sets }}{% endif %}" {% if i < exercises|length %}required{% endif %} /></label><br />
+      <label>Toistot:<br /><input type="number" name="reps" min="1" value="{% if i < exercises|length %}{{ exercises[i].reps }}{% endif %}" {% if i < exercises|length %}required{% endif %} /></label><br />
+      <label>Painot (kg):<br /><input type="number" name="weight" min="0" step="0.5" value="{% if i < exercises|length %}{{ exercises[i].weight }}{% endif %}" {% if i < exercises|length %}required{% endif %} /></label>
+    </fieldset>
+    {% endfor %}
 
     <input type="submit" value="Tallenna" />
   </form>
@@ -41,49 +64,6 @@
   <p>
     <a href="/users/{{ workout.user_id }}">Takaisin</a>
   </p>
-
-  <script>
-    const countInput = document.getElementById("exercise-count");
-    const exercisesContainer = document.getElementById("exercises");
-    const exerciseCategories = {{ exercise_categories | tojson }};
-    const initialExercises = {{ exercises | tojson }};
-
-    function renderExercises() {
-      const count = parseInt(countInput.value || "0", 10);
-      exercisesContainer.innerHTML = "";
-
-      for (let i = 0; i < count; i += 1) {
-        const data = initialExercises[i] || {};
-        const fieldset = document.createElement("fieldset");
-        const legend = document.createElement("legend");
-        legend.textContent = "Harjoite " + (i + 1);
-        fieldset.appendChild(legend);
-
-        let categoryOptions = "";
-        for (const [value, label] of exerciseCategories) {
-          const selected = data.category === value ? " selected" : "";
-          categoryOptions += '<option value="' + value + '"' + selected + '>' + label + '</option>';
-        }
-
-        const setsValue = data.sets !== undefined ? data.sets : "";
-        const repsValue = data.reps !== undefined ? data.reps : "";
-        const weightValue = data.weight !== undefined ? data.weight : "";
-
-        fieldset.innerHTML +=
-          '<label>Harjoite:<br /><select name="exercise_category" required>' +
-          categoryOptions +
-          '</select></label><br />' +
-          '<label>Setit:<br /><input type="number" name="sets" min="1" value="' + setsValue + '" required /></label><br />' +
-          '<label>Toistot:<br /><input type="number" name="reps" min="1" value="' + repsValue + '" required /></label><br />' +
-          '<label>Painot (kg):<br /><input type="number" name="weight" min="0" step="0.5" value="' + weightValue + '" required /></label>';
-
-        exercisesContainer.appendChild(fieldset);
-      }
-    }
-
-    countInput.addEventListener("input", renderExercises);
-    window.addEventListener("load", renderExercises);
-  </script>
 </body>
 
 </html>

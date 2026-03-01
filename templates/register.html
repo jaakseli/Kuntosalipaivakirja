@@ -12,15 +12,6 @@
   <div class="flash" role="status">
     <div class="flash__inner">{{ messages[0] }}</div>
   </div>
-  <script>
-    setTimeout(() => {
-      const flash = document.querySelector(".flash");
-      if (flash) {
-        flash.classList.add("flash--hide");
-        setTimeout(() => flash.remove(), 400);
-      }
-    }, 2200);
-  </script>
   {% endif %}
   {% endwith %}
 

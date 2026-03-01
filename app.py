@@ -2,7 +2,7 @@ import secrets
 import sqlite3
 from flask import Flask
 from flask import abort, flash, redirect, render_template, request, session
-import config, users, workouts
+import config, users, workouts, comments
 
 app = Flask(__name__)
 app.secret_key = config.secret_key
@@ -86,15 +86,15 @@ def register():
         password2 = request.form["password2"]
 
         if password1 != password2:
-            flash("Salasanat eivat tasmää.")
+            flash("Salasanat eivät täsmää.")
             return redirect("/register")
 
         try:
             users.create_user(username, password1)
-            flash("Tunnus luotu onnistuneesti. Kirjaudu sisaan.")
+            flash("Tunnus luotu onnistuneesti. Kirjaudu sisään.")
             return redirect("/login")
         except sqlite3.IntegrityError:
-            flash("Kayttajanimi on jo varattu.")
+            flash("Käyttäjänimi on jo varattu.")
             return redirect("/register")
 
 @app.route("/login", methods=["GET", "POST"])
@@ -113,7 +113,7 @@ def login():
             session["user_id"] = user_id
             return redirect("/")
         else:
-            flash("Kirjautuminen epaonnistui.")
+            flash("Kirjautuminen epäonnistui.")
             return redirect("/login")
 
 @app.route("/logout")
@@ -127,7 +127,8 @@ def add_workout():
         return redirect("/login")
     
     if request.method == "GET":
-        return _render_add_workout()
+        exercise_count = request.args.get("exercise_count", default=1, type=int)
+        return _render_add_workout(exercise_count)
     
     if request.method == "POST":
         if not _validate_csrf():
@@ -157,7 +158,7 @@ def add_workout():
             return _render_add_workout()
 
         workouts.add_workout(user_id, workout_name, category, description, exercises)
-        flash("Treeni lisatty onnistuneesti.")
+        flash("Treeni lisätty onnistuneesti.")
         return redirect("/")
 
 @app.route("/workouts/<int:workout_id>/edit", methods=["GET", "POST"])
@@ -171,10 +172,12 @@ def edit_workout(workout_id):
 
     if request.method == "GET":
         exercises = workouts.get_workout_exercises(workout_id)
+        exercise_count = request.args.get("exercise_count", default=len(exercises), type=int)
         return render_template(
             "edit_workout.html",
             workout=workout,
             exercises=exercises,
+            exercise_count=exercise_count,
             workout_categories=WORKOUT_CATEGORIES,
             exercise_categories=EXERCISE_CATEGORIES,
         )
@@ -205,6 +208,7 @@ def edit_workout(workout_id):
         return redirect(f"/workouts/{workout_id}/edit")
 
     workouts.update_workout(workout_id, session["user_id"], workout_name, category, description, exercises)
+    flash("Treeni päivitetty onnistuneesti.")
     return redirect(f"/users/{session['user_id']}")
 
 @app.route("/workouts/<int:workout_id>")
@@ -214,13 +218,76 @@ def workout_stats(workout_id):
         return redirect("/")
 
     exercises = workouts.get_workout_exercises(workout_id)
+    workout_comments = comments.get_workout_comments(workout_id)
     return render_template(
         "workout_stats.html",
         workout=workout,
         exercises=exercises,
+        workout_comments=workout_comments,
         workout_category_labels=WORKOUT_CATEGORY_LABELS,
         exercise_category_labels=EXERCISE_CATEGORY_LABELS,
     )
+
+@app.route("/workouts/<int:workout_id>/delete", methods=["POST"])
+def delete_workout_route(workout_id):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    workout = workouts.get_workout(workout_id)
+    if workout is None or workout["user_id"] != session["user_id"]:
+        return redirect("/")
+
+    if not _validate_csrf():
+        abort(400)
+
+    workouts.delete_workout(workout_id, session["user_id"])
+    flash("Treeni poistettu onnistuneesti.")
+    return redirect("/")
+
+@app.route("/workouts/<int:workout_id>/comment", methods=["POST"])
+def add_comment_route(workout_id):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if not _validate_csrf():
+        abort(400)
+
+    workout = workouts.get_workout(workout_id)
+    if workout is None:
+        return redirect("/")
+
+    comment_text = request.form.get("comment_text", "").strip()
+    if not comment_text or len(comment_text) == 0:
+        flash("Kommentti ei voi olla tyhjä.")
+        return redirect(f"/workouts/{workout_id}")
+
+    if len(comment_text) > 5000:
+        flash("Kommentti on liian pitkä.")
+        return redirect(f"/workouts/{workout_id}")
+
+    comments.add_comment(workout_id, session["user_id"], comment_text)
+    flash("Kommentti lisätty onnistuneesti.")
+    return redirect(f"/workouts/{workout_id}")
+
+@app.route("/comments/<int:comment_id>/delete", methods=["POST"])
+def delete_comment_route(comment_id):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if not _validate_csrf():
+        abort(400)
+
+    comment = comments.get_comment(comment_id)
+    if comment is None:
+        return redirect("/")
+
+    workout_id = comment["workout_id"]
+    if comment["user_id"] != session["user_id"]:
+        return redirect(f"/workouts/{workout_id}")
+
+    comments.delete_comment(comment_id, session["user_id"])
+    flash("Kommentti poistettu onnistuneesti.")
+    return redirect(f"/workouts/{workout_id}")
 
 @app.route("/users/<int:user_id>")
 def user_stats(user_id):
@@ -246,26 +313,29 @@ def _parse_exercises(exercise_count, categories, sets_list, reps_list, weight_li
     if exercise_count is None or exercise_count <= 0:
         return None
 
-    if not (
-        len(categories)
-        == len(sets_list)
-        == len(reps_list)
-        == len(weight_list)
-        == exercise_count
-    ):
-        return None
+    max_len = max(len(categories), len(sets_list), len(reps_list), len(weight_list))
+    
+    # Pad lists to same length with empty strings
+    categories = categories + [''] * (max_len - len(categories))
+    sets_list = sets_list + [''] * (max_len - len(sets_list))
+    reps_list = reps_list + [''] * (max_len - len(reps_list))
+    weight_list = weight_list + [''] * (max_len - len(weight_list))
 
     exercises = []
     for category, sets, reps, weight in zip(categories, sets_list, reps_list, weight_list):
+        # Skip empty exercises
+        if not category or not sets or not reps or not weight:
+            continue
+            
         try:
             sets_value = int(sets)
             reps_value = int(reps)
             weight_value = float(weight)
         except ValueError:
-            return None
+            continue
 
         if sets_value <= 0 or reps_value <= 0 or weight_value < 0:
-            return None
+            continue
 
         exercises.append(
             {
@@ -276,11 +346,16 @@ def _parse_exercises(exercise_count, categories, sets_list, reps_list, weight_li
             }
         )
 
+    # Must have at least one valid exercise
+    if len(exercises) == 0:
+        return None
+
     return exercises
 
-def _render_add_workout():
+def _render_add_workout(exercise_count=1):
     return render_template(
         "add_workout.html",
         workout_categories=WORKOUT_CATEGORIES,
         exercise_categories=EXERCISE_CATEGORIES,
+        exercise_count=exercise_count,
     )

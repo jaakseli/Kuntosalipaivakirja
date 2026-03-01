@@ -74,6 +74,15 @@ form {
   padding: 20px 24px;
 }
 
+/* Remove card styling from inline forms (delete buttons) */
+form[style*="display:inline"] {
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
 fieldset {
   padding: 16px 18px 18px;
   margin: 16px 0;
@@ -106,20 +115,36 @@ textarea {
 
 input[type="submit"],
 button {
-  width: auto;
-  background: var(--accent);
-  color: #fff;
+  background: none;
+  color: var(--accent);
   border: none;
-  padding: 10px 18px;
-  border-radius: 999px;
-  font-weight: 600;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 0;
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(231, 111, 81, 0.3);
+  font-weight: 600;
+  font-family: inherit;
+  font-size: inherit;
+  box-shadow: none;
 }
 
 input[type="submit"]:hover,
 button:hover {
-  background: var(--accent-dark);
+  color: var(--accent-dark);
+}
+
+input[type="submit"]:focus,
+button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+input[type="submit"]:active,
+button:active {
+  outline: none;
+  box-shadow: none;
 }
 
 ul {

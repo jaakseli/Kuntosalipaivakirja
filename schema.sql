@@ -22,6 +22,16 @@ CREATE TABLE exercises (
     sets INTEGER NOT NULL,
     reps INTEGER NOT NULL,
     weight REAL NOT NULL,
-    FOREIGN KEY (workout_id) REFERENCES workouts(id)
+    FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE CASCADE
+);
+
+CREATE TABLE comments (
+    id INTEGER PRIMARY KEY,
+    workout_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    comment_text TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
